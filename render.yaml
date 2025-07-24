@@ -1,2 +1,7 @@
-Start Command: python bot.py
+services:
+  - type: web
+    name: kl-faculty-bot
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
 
