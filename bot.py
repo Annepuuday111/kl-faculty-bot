@@ -1,12 +1,18 @@
 import logging
 import pandas as pd
+from flask import Flask, request
 from PIL import Image
 from io import BytesIO
-from telegram import Update
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
+from telegram import Update, Bot
+from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters, Dispatcher
 
-TOKEN = "8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8"
+TOKEN = "8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8"  # Replace with your actual token
+bot = Bot(token=TOKEN)
 faculty_df = pd.read_csv("faculty_data.csv")
+
+app = Flask(__name__)
+application = ApplicationBuilder().token(TOKEN).build()
+dispatcher: Dispatcher = application.dispatcher  # Access dispatcher directly
 
 def resize_logo(path="logo.png", size=(150, 100)):
     img = Image.open(path)
@@ -59,10 +65,21 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
 
+# Register handlers
+dispatcher.add_handler(CommandHandler("start", start))
+dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+
+@app.route("/")
+def home():
+    return "KL Faculty Bot is running!"
+
+@app.route(f"/{TOKEN}", methods=["POST"])
+def webhook():
+    update = Update.de_json(request.get_json(force=True), bot)
+    application.update_queue.put_nowait(update)
+    return "ok"
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    app = ApplicationBuilder().token(TOKEN).build()
-    app.add_handler(CommandHandler("start", start))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.run_polling()
+    app.run(host="0.0.0.0", port=5000)
 
