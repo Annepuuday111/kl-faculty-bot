@@ -1,18 +1,19 @@
-import logging
+import os
 import pandas as pd
-from flask import Flask, request
 from PIL import Image
 from io import BytesIO
+from flask import Flask, request
 from telegram import Update, Bot
-from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters, Dispatcher
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters, Dispatcher
 
-TOKEN = "8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8"  # Replace with your actual token
-bot = Bot(token=TOKEN)
+TOKEN = os.getenv("BOT_TOKEN", "8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8")
+URL = os.getenv("WEBHOOK_URL", "https://kl-faculty-bot.onrender.com")
+
 faculty_df = pd.read_csv("faculty_data.csv")
+bot = Bot(token=TOKEN)
 
 app = Flask(__name__)
-application = ApplicationBuilder().token(TOKEN).build()
-dispatcher: Dispatcher = application.dispatcher  # Access dispatcher directly
+application = Application.builder().token(TOKEN).build()
 
 def resize_logo(path="logo.png", size=(150, 100)):
     img = Image.open(path)
@@ -65,21 +66,26 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
 
-# Register handlers
-dispatcher.add_handler(CommandHandler("start", start))
-dispatcher.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-
-@app.route("/")
-def home():
-    return "KL Faculty Bot is running!"
+application.add_handler(CommandHandler("start", start))
+application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
 @app.route(f"/{TOKEN}", methods=["POST"])
 def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
-    application.update_queue.put_nowait(update)
+    application.update_queue.put(update)
     return "ok"
 
+@app.route("/")
+def index():
+    return "KL Faculty Bot is running!"
+
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    app.run(host="0.0.0.0", port=5000)
+    import asyncio
+
+    async def main():
+        await bot.set_webhook(f"{URL}/{TOKEN}")
+        print("Webhook set!")
+
+    asyncio.run(main())
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
 
