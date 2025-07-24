@@ -4,7 +4,7 @@ from PIL import Image
 from io import BytesIO
 from flask import Flask, request
 from telegram import Update, Bot
-from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters, Dispatcher
+from telegram.ext import Application, CommandHandler, MessageHandler, ContextTypes, filters
 
 TOKEN = os.getenv("BOT_TOKEN", "8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8")
 URL = os.getenv("WEBHOOK_URL", "https://kl-faculty-bot.onrender.com")
