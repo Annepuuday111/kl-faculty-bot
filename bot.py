@@ -1,16 +1,20 @@
 import logging
 import os
 import pandas as pd
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-# ✅ Load token securely from environment variables
-TOKEN = os.environ.get("8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8")
+# ✅ Load .env file
+load_dotenv()
 
-# ✅ Read your CSV (present in project folder)
+# ✅ Get bot token from environment
+TOKEN = os.environ.get("BOT_TOKEN")
+
+# ✅ Load faculty data
 faculty_df = pd.read_csv("faculty_data.csv")
 
-# ✅ Start command
+# ✅ Handle /start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
@@ -26,7 +30,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode="Markdown"
     )
 
-# ✅ Message handler for search
+# ✅ Handle search messages
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.message.text.lower()
     matches = faculty_df[
@@ -55,7 +59,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
 
-# ✅ Entry point
+# ✅ Main entry point
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     app = ApplicationBuilder().token(TOKEN).build()
