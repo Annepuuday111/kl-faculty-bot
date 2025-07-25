@@ -1,11 +1,16 @@
 import logging
+import os
 import pandas as pd
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, ContextTypes, filters
 
-TOKEN = "8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8"
+# ✅ Load token securely from environment variables
+TOKEN = os.environ.get("8096176082:AAHCOopkSJbdLXkS837xNWPHJTKolxfu3x8")
+
+# ✅ Read your CSV (present in project folder)
 faculty_df = pd.read_csv("faculty_data.csv")
 
+# ✅ Start command
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_photo(
         chat_id=update.effective_chat.id,
@@ -13,14 +18,15 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         caption=(
             "👋 *Welcome to KL Faculty Finder Bot!*\n\n"
             "🔎 Search by:\n"
-            "👤 Name (e.g., `Sarvani`)\n"
-            "🆔 Emp No (e.g., `210354`)\n"
-            "🏢 Department (e.g., `Data Science`)\n\n"
+            "👤 Name (e.g., `Uday Kumar`)\n"
+            "🆔 Emp No (e.g., `31007`)\n"
+            "🏢 Department (e.g., `Computer Science`)\n\n"
             "📨 Just type and send your query!"
         ),
         parse_mode="Markdown"
     )
 
+# ✅ Message handler for search
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.message.text.lower()
     matches = faculty_df[
@@ -49,6 +55,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 parse_mode="Markdown"
             )
 
+# ✅ Entry point
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     app = ApplicationBuilder().token(TOKEN).build()
